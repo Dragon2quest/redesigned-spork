@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}My Groups — ClassConnect{% endblock %}
+{% block content %}
+<h1 class="page-title">👥 My Groups</h1>
+<p class="page-sub">Your assigned groups and topics</p>
+
+{% if groups %}
+  {% for item in groups %}
+  <div class="card" style="margin-bottom:1.25rem">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem">
+      <div>
+        <span style="font-weight:700;font-size:1.1rem">{{ item.g.name }}</span>
+        <span class="badge badge-{% if item.g.group_type=='random' %}amber{% else %}purple{% endif %}" style="margin-left:.5rem">{{ item.g.group_type }}</span>
+        <span style="margin-left:.4rem;font-size:.85rem;color:var(--muted)">· {{ item.g.cname }}</span>
+      </div>
+    </div>
+
+    <!-- Groupmates -->
+    <div style="margin-top:.75rem">
+      <div style="font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.4rem">Groupmates</div>
+      <div class="member-list">
+        {% for m in item.members %}
+          <span class="member-chip {% if m.name == session.name %}badge-green{% endif %}">
+            {{ m.name }}{% if m.name == session.name %} (you){% endif %}
+          </span>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Topics -->
+    {% if item.topics %}
+    <div style="margin-top:1.25rem">
+      <div style="font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.75rem">Assigned Topics</div>
+      {% for td in item.topics %}
+      <div style="background:var(--surface2);border-radius:10px;padding:1rem;margin-bottom:.75rem;border:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem">
+          <div>
+            <div style="font-weight:700;font-size:.95rem">{{ td.t.title }}</div>
+            {% if td.t.subject %}<span class="badge badge-purple" style="margin-top:.3rem">{{ td.t.subject }}</span>{% endif %}
+          </div>
+          {% if td.submitted %}
+            <span class="badge badge-green">✓ Submitted</span>
+          {% else %}
+            <span class="badge badge-amber">⏳ Pending</span>
+          {% endif %}
+        </div>
+
+        {% if td.t.description %}
+        <p style="color:var(--muted);font-size:.87rem;margin-top:.5rem;line-height:1.6">{{ td.t.description }}</p>
+        {% endif %}
+
+        {% if td.t.deadline %}
+        <div style="font-size:.82rem;color:var(--amber);margin-top:.4rem">📅 Due: {{ td.t.deadline[:16] }}</div>
+        {% endif %}
+
+        {% if not td.submitted %}
+        <details style="margin-top:.75rem">
+          <summary style="cursor:pointer;color:var(--primary);font-size:.88rem;font-weight:600;list-style:none">▶ Submit this topic</summary>
+          <form method="POST" style="margin-top:.75rem">
+            <input type="hidden" name="topic_id" value="{{ td.t.id }}">
+            <input type="hidden" name="group_id" value="{{ item.g.id }}">
+            <div class="form-group">
+              <label>Your Submission</label>
+              <textarea name="content" placeholder="Submit your work here..." required style="min-height:100px"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">Submit →</button>
+          </form>
+        </details>
+        {% else %}
+        <div style="font-size:.85rem;color:var(--green);margin-top:.5rem">✅ You have submitted this topic.</div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div style="margin-top:1rem;color:var(--muted);font-size:.88rem">No topics assigned to this group yet.</div>
+    {% endif %}
+  </div>
+  {% endfor %}
+{% else %}
+<div class="card empty">
+  <div class="empty-icon">👥</div>
+  <p>You haven't been assigned to any group yet. Your teacher will create groups soon.</p>
+</div>
+{% endif %}
+{% endblock %}

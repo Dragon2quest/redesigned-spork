@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ClassConnect — Smart Classroom Platform</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#080d17;--surface:#111827;--border:#2d3748;--primary:#6366f1;--green:#10b981;--amber:#f59e0b;--text:#f1f5f9;--muted:#9ca3af}
+    body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+    h1,h2,h3{font-family:'Syne',sans-serif}
+    a{text-decoration:none}
+
+    /* HERO */
+    .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem;position:relative;overflow:hidden}
+    .hero::before{content:'';position:absolute;width:600px;height:600px;background:radial-gradient(circle,rgba(99,102,241,.15) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none}
+    .brand{font-size:1.1rem;font-weight:700;color:var(--primary);margin-bottom:2rem;letter-spacing:2px;text-transform:uppercase}
+    .hero h1{font-size:clamp(2.5rem,6vw,4.5rem);font-weight:800;line-height:1.1;margin-bottom:1.25rem;letter-spacing:-1px}
+    .hero h1 span{background:linear-gradient(135deg,var(--primary),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .hero p{font-size:1.15rem;color:var(--muted);max-width:520px;line-height:1.7;margin-bottom:2.5rem}
+    .hero-btns{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center}
+    .btn{display:inline-flex;align-items:center;gap:.5rem;padding:.75rem 1.8rem;border-radius:10px;font-family:'Outfit',sans-serif;font-weight:600;font-size:1rem;cursor:pointer;border:none;transition:all .2s}
+    .btn-primary{background:var(--primary);color:#fff}
+    .btn-primary:hover{background:#4f46e5;transform:translateY(-2px);box-shadow:0 8px 24px rgba(99,102,241,.3)}
+    .btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
+    .btn-ghost:hover{border-color:var(--primary);color:var(--primary)}
+
+    /* FEATURES */
+    .features{padding:5rem 2rem;max-width:1000px;margin:0 auto}
+    .features h2{font-size:2rem;font-weight:800;text-align:center;margin-bottom:.5rem}
+    .features p.sub{text-align:center;color:var(--muted);margin-bottom:3rem}
+    .feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.25rem}
+    .feat{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.5rem;transition:border-color .2s}
+    .feat:hover{border-color:var(--primary)}
+    .feat-icon{font-size:2rem;margin-bottom:.75rem}
+    .feat h3{font-size:1rem;font-weight:700;margin-bottom:.4rem}
+    .feat p{font-size:.88rem;color:var(--muted);line-height:1.6}
+
+    /* ROLES */
+    .roles{padding:4rem 2rem;max-width:800px;margin:0 auto;text-align:center}
+    .roles h2{font-size:2rem;font-weight:800;margin-bottom:3rem}
+    .roles-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+    .role-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:2rem}
+    .role-card h3{font-size:1.2rem;font-weight:800;margin-bottom:.5rem}
+    .role-card p{color:var(--muted);font-size:.9rem;margin-bottom:1.25rem;line-height:1.6}
+    @media(max-width:600px){.roles-grid{grid-template-columns:1fr}}
+
+    footer{text-align:center;padding:2rem;color:var(--muted);font-size:.85rem;border-top:1px solid var(--border)}
+  </style>
+</head>
+<body>
+<section class="hero">
+  <div class="brand">✦ ClassConnect</div>
+  <h1>Where Teachers &amp;<br><span>Students Connect</span></h1>
+  <p>Share notes daily, assign group work, track submissions — all in one clean platform built for your classroom.</p>
+  <div class="hero-btns">
+    <a href="/register" class="btn btn-primary">Get Started Free →</a>
+    <a href="/login" class="btn btn-ghost">Log In</a>
+  </div>
+</section>
+
+<section class="features">
+  <h2>Everything your class needs</h2>
+  <p class="sub">Designed for real classroom workflows</p>
+  <div class="feat-grid">
+    <div class="feat"><div class="feat-icon">📄</div><h3>Daily Notes</h3><p>Teachers upload notes anytime; students get notified and can access them instantly.</p></div>
+    <div class="feat"><div class="feat-icon">📝</div><h3>Assignments</h3><p>Create assignments with deadlines, subject tags, and receive student submissions.</p></div>
+    <div class="feat"><div class="feat-icon">👥</div><h3>Smart Groups</h3><p>Generate random groups in one click or hand-pick specific students for a group.</p></div>
+    <div class="feat"><div class="feat-icon">🗂</div><h3>Topic Assignment</h3><p>Assign a unique topic per group on any subject and let them submit directly.</p></div>
+    <div class="feat"><div class="feat-icon">🔔</div><h3>Notifications</h3><p>Students get real-time alerts for every note, assignment, and group topic.</p></div>
+    <div class="feat"><div class="feat-icon">🔑</div><h3>Class Code Join</h3><p>Students self-register using a class code — no manual enrollment needed.</p></div>
+  </div>
+</section>
+
+<section class="roles">
+  <h2>Built for both sides</h2>
+  <div class="roles-grid">
+    <div class="role-card">
+      <div style="font-size:2.5rem;margin-bottom:.75rem">👩‍🏫</div>
+      <h3>I'm a Teacher</h3>
+      <p>Register, get your class code, manage notes, assignments, groups and see all submissions.</p>
+      <a href="/register?role=teacher" class="btn btn-primary" style="width:100%;justify-content:center">Register as Teacher</a>
+    </div>
+    <div class="role-card">
+      <div style="font-size:2.5rem;margin-bottom:.75rem">🎓</div>
+      <h3>I'm a Student</h3>
+      <p>Register with your teacher's class code and get instant access to notes, tasks, and your group.</p>
+      <a href="/register?role=student" class="btn btn-ghost" style="width:100%;justify-content:center">Register as Student</a>
+    </div>
+  </div>
+</section>
+
+<footer>Built with Flask + SQLite · DBMS Mini Project</footer>
+</body>
+</html>

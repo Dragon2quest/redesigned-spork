@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Register — ClassConnect{% endblock %}
+{% block content %}
+<div style="max-width:480px;margin:2.5rem auto">
+  <h1 class="page-title">Create Account</h1>
+  <p class="page-sub">Already registered? <a href="/login" style="color:var(--primary)">Log in here</a></p>
+  <div class="card">
+    <form method="POST">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" name="name" placeholder="Your full name" required>
+      </div>
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" name="email" placeholder="you@email.com" required>
+        <small style="color:var(--muted);font-size:.78rem;margin-top:.2rem;display:block">Used for Gmail notifications</small>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" name="password" placeholder="Minimum 6 characters" required minlength="6">
+      </div>
+      <div class="form-group">
+        <label>I am a</label>
+        <select name="role" id="role-select" onchange="toggleFields()" required>
+          <option value="">— Select your role —</option>
+          <option value="teacher" {% if request.args.get('role')=='teacher' %}selected{% endif %}>Teacher / Faculty</option>
+          <option value="student" {% if request.args.get('role')=='student' %}selected{% endif %}>Student</option>
+        </select>
+      </div>
+
+      <!-- TEACHER FIELDS -->
+      <div id="teacher-fields" style="display:none;border-top:1px solid var(--border);padding-top:1rem;margin-top:.5rem">
+        <div class="form-group">
+          <label>Staff ID</label>
+          <input type="text" name="staff_id" placeholder="e.g. FAC001" style="text-transform:uppercase;letter-spacing:2px">
+          <small style="color:var(--muted);font-size:.78rem;margin-top:.2rem;display:block">This will be your login ID</small>
+        </div>
+        <div class="form-group">
+          <label>Class / Department Name</label>
+          <input type="text" name="class_name" placeholder="e.g. CS-A 2024, DBMS Lab">
+        </div>
+      </div>
+
+      <!-- STUDENT FIELDS -->
+      <div id="student-fields" style="display:none;border-top:1px solid var(--border);padding-top:1rem;margin-top:.5rem">
+        <div class="form-group">
+          <label>USN (University Serial Number)</label>
+          <input type="text" name="usn" placeholder="e.g. 1RV21CS001" style="text-transform:uppercase;letter-spacing:2px">
+          <small style="color:var(--muted);font-size:.78rem;margin-top:.2rem;display:block">This will be your login ID</small>
+        </div>
+        <div class="form-group">
+          <label>Class Code</label>
+          <input type="text" name="class_code" placeholder="e.g. ABC123" style="text-transform:uppercase;letter-spacing:4px;font-size:1.1rem">
+          <small style="color:var(--muted);font-size:.78rem;margin-top:.2rem;display:block">Ask your teacher for this code</small>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:.75rem">Create Account →</button>
+    </form>
+  </div>
+</div>
+<script>
+function toggleFields() {
+  var r = document.getElementById('role-select').value;
+  document.getElementById('teacher-fields').style.display = r==='teacher'?'block':'none';
+  document.getElementById('student-fields').style.display = r==='student'?'block':'none';
+}
+window.onload = toggleFields;
+</script>
+{% endblock %}

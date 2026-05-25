@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}My Progress — ClassConnect{% endblock %}
+{% block content %}
+<h1 class="page-title">📈 My Progress</h1>
+<p class="page-sub">Your overall performance in {{ cls.name if cls else 'your class' }}</p>
+
+{% if cls %}
+<!-- Overall Score -->
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:2rem;margin-bottom:2rem;text-align:center">
+  <div style="font-size:.85rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:.5rem">Overall Score</div>
+  <div style="font-family:'Syne',sans-serif;font-size:4rem;font-weight:800;
+    color:{% if overall >= 75 %}var(--green){% elif overall >= 50 %}var(--amber){% else %}var(--red){% endif %}">
+    {{ overall }}%
+  </div>
+  <div style="color:var(--muted);font-size:.9rem">
+    {% if overall >= 75 %}🌟 Great job! Keep it up!{% elif overall >= 50 %}📈 You're doing okay. Push a bit more!{% else %}⚠️ Needs attention. Talk to your teacher.{% endif %}
+  </div>
+</div>
+
+<div class="grid-3" style="margin-bottom:2rem">
+  <!-- Attendance -->
+  <div class="card" style="text-align:center">
+    <div style="font-size:2rem;margin-bottom:.5rem">📋</div>
+    <div style="font-size:.82rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem">Attendance</div>
+    <div style="font-family:'Syne',sans-serif;font-size:2.2rem;font-weight:800;color:{% if att_pct >= 75 %}var(--green){% elif att_pct >= 50 %}var(--amber){% else %}var(--red){% endif %}">{{ att_pct }}%</div>
+    <div style="font-size:.82rem;color:var(--muted);margin:.25rem 0 .75rem">{{ pres }}/{{ total_d }} days</div>
+    <div class="prog-bar"><div class="prog-fill {% if att_pct >= 75 %}green{% elif att_pct >= 50 %}amber{% else %}red{% endif %}" style="width:{{ att_pct }}%"></div></div>
+  </div>
+
+  <!-- Assignments -->
+  <div class="card" style="text-align:center">
+    <div style="font-size:2rem;margin-bottom:.5rem">📝</div>
+    <div style="font-size:.82rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem">Assignments</div>
+    <div style="font-family:'Syne',sans-serif;font-size:2.2rem;font-weight:800;color:{% if a_pct >= 75 %}var(--green){% elif a_pct >= 50 %}var(--amber){% else %}var(--red){% endif %}">{{ a_pct }}%</div>
+    <div style="font-size:.82rem;color:var(--muted);margin:.25rem 0 .75rem">{{ done_a }}/{{ total_a }} submitted</div>
+    <div class="prog-bar"><div class="prog-fill {% if a_pct >= 75 %}green{% elif a_pct >= 50 %}amber{% else %}red{% endif %}" style="width:{{ a_pct }}%"></div></div>
+  </div>
+
+  <!-- Group Topics -->
+  <div class="card" style="text-align:center">
+    <div style="font-size:2rem;margin-bottom:.5rem">🗂</div>
+    <div style="font-size:.82rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem">Group Topics</div>
+    <div style="font-family:'Syne',sans-serif;font-size:2.2rem;font-weight:800;color:{% if t_pct >= 75 %}var(--green){% elif t_pct >= 50 %}var(--amber){% else %}var(--red){% endif %}">{{ t_pct }}%</div>
+    <div style="font-size:.82rem;color:var(--muted);margin:.25rem 0 .75rem">{{ done_t }}/{{ total_t }} done</div>
+    <div class="prog-bar"><div class="prog-fill {% if t_pct >= 75 %}green{% elif t_pct >= 50 %}amber{% else %}red{% endif %}" style="width:{{ t_pct }}%"></div></div>
+  </div>
+</div>
+
+<!-- Recent Submissions -->
+{% if recent_subs %}
+<div class="card">
+  <div class="card-title">Recent Submissions</div>
+  <table>
+    <thead><tr><th>Type</th><th>Title</th><th>Submitted At</th></tr></thead>
+    <tbody>
+      {% for s in recent_subs %}
+      <tr>
+        <td>{% if s.assignment_id %}<span class="badge badge-purple">Assignment</span>{% else %}<span class="badge badge-green">Topic</span>{% endif %}</td>
+        <td>{{ s.atitle or s.ttitle or '—' }}</td>
+        <td style="font-size:.82rem;color:var(--muted)">{{ s.submitted_at[:16] }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% else %}
+<div class="card empty"><div class="empty-icon">📈</div><p>Not enrolled in any class yet.</p></div>
+{% endif %}
+{% endblock %}

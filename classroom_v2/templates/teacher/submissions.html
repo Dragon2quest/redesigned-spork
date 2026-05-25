@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Submissions — ClassConnect{% endblock %}
+{% block content %}
+<h1 class="page-title">📬 Submissions</h1>
+<p class="page-sub">All student submissions for {{ cls.name }}</p>
+
+{% if subs %}
+<div class="card">
+  <table>
+    <thead>
+      <tr><th>Student</th><th>Type</th><th>Title</th><th>Group</th><th>Submitted At</th></tr>
+    </thead>
+    <tbody>
+      {% for s in subs %}
+      <tr>
+        <td style="font-weight:600">{{ s.student_name }}</td>
+        <td>
+          {% if s.assignment_id %}
+            <span class="badge badge-purple">Assignment</span>
+          {% else %}
+            <span class="badge badge-green">Topic</span>
+          {% endif %}
+        </td>
+        <td>{{ s.atitle or s.ttitle or '—' }}</td>
+        <td>{{ s.gname or '—' }}</td>
+        <td style="font-size:.85rem;color:var(--muted)">{{ s.submitted_at[:16] }}</td>
+      </tr>
+      {% if s.content %}
+      <tr>
+        <td colspan="5" style="background:var(--surface2);font-size:.85rem;color:var(--muted);white-space:pre-wrap;padding:.75rem 1rem">{{ s.content }}</td>
+      </tr>
+      {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card empty">
+  <div class="empty-icon">📬</div>
+  <p>No submissions yet.</p>
+</div>
+{% endif %}
+{% endblock %}

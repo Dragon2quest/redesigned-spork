@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Settings — ClassConnect{% endblock %}
+{% block content %}
+<div style="max-width:540px">
+  <h1 class="page-title">⚙️ Gmail Settings</h1>
+  <p class="page-sub">Connect your Gmail to send automated email notifications</p>
+
+  {% if cfg %}
+  <div style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;gap:.75rem;align-items:center">
+    <span style="font-size:1.5rem">✅</span>
+    <div>
+      <div style="font-weight:600;color:var(--green)">Gmail Connected</div>
+      <div style="font-size:.85rem;color:var(--muted)">{{ cfg.gmail }}</div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <div class="card-title">📧 Connect Gmail Account</div>
+    <form method="POST">
+      <div class="form-group">
+        <label>Gmail Address</label>
+        <input type="email" name="gmail" value="{{ cfg.gmail if cfg else '' }}" placeholder="yourname@gmail.com" required>
+      </div>
+      <div class="form-group">
+        <label>Gmail App Password</label>
+        <input type="password" name="app_password" placeholder="16-character app password" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Test & Save Connection</button>
+    </form>
+  </div>
+
+  <div class="card" style="margin-top:1.5rem">
+    <div class="card-title">🔑 How to get a Gmail App Password</div>
+    <ol style="color:var(--muted);font-size:.88rem;line-height:2;padding-left:1.25rem">
+      <li>Go to your Google Account → <strong style="color:var(--text)">myaccount.google.com</strong></li>
+      <li>Click <strong style="color:var(--text)">Security</strong> in the left menu</li>
+      <li>Enable <strong style="color:var(--text)">2-Step Verification</strong> if not already on</li>
+      <li>Search for <strong style="color:var(--text)">"App Passwords"</strong> in the search bar</li>
+      <li>Create a new app password → select <strong style="color:var(--text)">Mail</strong></li>
+      <li>Copy the <strong style="color:var(--text)">16-character password</strong> and paste it above</li>
+    </ol>
+    <div style="background:rgba(99,102,241,.1);border-radius:8px;padding:.75rem 1rem;margin-top:1rem;font-size:.84rem;color:var(--muted)">
+      ⚠️ Use the App Password (not your regular Gmail password). Your credentials are stored locally in the database.
+    </div>
+  </div>
+</div>
+{% endblock %}

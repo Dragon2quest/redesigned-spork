@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Assignments — ClassConnect{% endblock %}
+{% block content %}
+<h1 class="page-title">📝 Assignments</h1>
+<p class="page-sub">Submit before the deadline to avoid overdue notifications</p>
+{% if assignments %}
+<div style="display:grid;gap:1rem">
+  {% for a in assignments %}
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem">
+      <div>
+        <div style="font-weight:700;font-size:1.05rem">{{ a.title }}</div>
+        <div style="font-size:.78rem;color:var(--muted);margin-top:.15rem">{{ a.cname }}</div>
+      </div>
+      <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+        {% if a.subject %}<span class="badge badge-purple">{{ a.subject }}</span>{% endif %}
+        {% if a.submitted %}<span class="badge badge-green">✓ Submitted</span>{% else %}<span class="badge badge-amber">⏳ Pending</span>{% endif %}
+      </div>
+    </div>
+    {% if a.description %}<p style="color:var(--muted);font-size:.88rem;margin:.7rem 0;line-height:1.6">{{ a.description }}</p>{% endif %}
+    <div style="font-size:.83rem;color:var(--amber);margin-bottom:.75rem">📅 Due: {{ a.deadline[:16] }}</div>
+    {% if not a.submitted %}
+    <details>
+      <summary style="cursor:pointer;color:var(--primary);font-size:.88rem;font-weight:600;list-style:none">▶ Submit Assignment</summary>
+      <form method="POST" style="margin-top:.75rem">
+        <input type="hidden" name="assignment_id" value="{{ a.id }}">
+        <div class="form-group"><label>Your Work</label><textarea name="content" required style="min-height:110px" placeholder="Write your answer or paste your work here..."></textarea></div>
+        <button type="submit" class="btn btn-primary">Submit →</button>
+      </form>
+    </details>
+    {% else %}<div style="font-size:.86rem;color:var(--green)">✅ Already submitted.</div>{% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card empty"><div class="empty-icon">📝</div><p>No assignments yet.</p></div>
+{% endif %}
+{% endblock %}

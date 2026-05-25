@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}Groups — ClassConnect{% endblock %}
+{% block content %}
+<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;margin-bottom:2rem">
+  <div>
+    <h1 class="page-title">👥 Groups</h1>
+    <p class="page-sub">Create groups and assign topics in {{ cls.name }}</p>
+  </div>
+  <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+    <button class="btn btn-primary" onclick="document.getElementById('random-modal').classList.add('open')">⚡ Random Groups</button>
+    <button class="btn btn-ghost" onclick="document.getElementById('specific-modal').classList.add('open')">✋ Specific Group</button>
+  </div>
+</div>
+
+{% if groups %}
+  {% for item in groups %}
+  <div class="card" style="margin-bottom:1.25rem">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem">
+      <div>
+        <span style="font-weight:700;font-size:1.05rem">{{ item.g.name }}</span>
+        <span class="badge badge-{% if item.g.group_type=='random' %}amber{% else %}purple{% endif %}" style="margin-left:.5rem">{{ item.g.group_type }}</span>
+      </div>
+      <button class="btn btn-green btn-sm"
+        onclick="document.getElementById('topic-modal-{{ item.g.id }}').classList.add('open')">+ Assign Topic</button>
+    </div>
+
+    <!-- Members -->
+    <div class="member-list" style="margin-top:.75rem">
+      {% for m in item.members %}
+        <span class="member-chip">{{ m.name }}</span>
+      {% endfor %}
+    </div>
+
+    <!-- Topics -->
+    {% if item.topics %}
+    <div style="margin-top:1rem">
+      <div style="font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem">Assigned Topics</div>
+      {% for t in item.topics %}
+      <div style="background:var(--surface2);border-radius:8px;padding:.7rem 1rem;margin-bottom:.4rem">
+        <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:.3rem">
+          <span style="font-weight:600;font-size:.92rem">{{ t.title }}</span>
+          <span class="badge badge-purple">{{ t.subject }}</span>
+        </div>
+        {% if t.description %}<div style="color:var(--muted);font-size:.83rem;margin-top:.25rem">{{ t.description }}</div>{% endif %}
+        {% if t.deadline %}<div style="font-size:.78rem;color:var(--amber);margin-top:.25rem">Due: {{ t.deadline[:16] }}</div>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Topic Modal per group -->
+  <div class="modal-bg" id="topic-modal-{{ item.g.id }}">
+    <div class="modal">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+        <div class="modal-title" style="margin:0">Assign Topic to {{ item.g.name }}</div>
+        <button class="modal-close" onclick="document.getElementById('topic-modal-{{ item.g.id }}').classList.remove('open')">✕</button>
+      </div>
+      <form method="POST">
+        <input type="hidden" name="action" value="assign_topic">
+        <input type="hidden" name="group_id" value="{{ item.g.id }}">
+        <div class="form-group">
+          <label>Topic Title</label>
+          <input type="text" name="topic_title" placeholder="e.g. Normalization in DBMS" required>
+        </div>
+        <div class="form-group">
+          <label>Subject</label>
+          <input type="text" name="subject" placeholder="e.g. DBMS">
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea name="description" placeholder="Explain the topic requirements..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Deadline</label>
+          <input type="datetime-local" name="deadline">
+        </div>
+        <button type="submit" class="btn btn-green" style="width:100%;justify-content:center">Assign Topic</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+
+{% else %}
+<div class="card empty">
+  <div class="empty-icon">👥</div>
+  <p>No groups yet. Create random groups or make a specific one.</p>
+</div>
+{% endif %}
+
+<!-- Random Groups Modal -->
+<div class="modal-bg" id="random-modal">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+      <div class="modal-title" style="margin:0">⚡ Create Random Groups</div>
+      <button class="modal-close" onclick="document.getElementById('random-modal').classList.remove('open')">✕</button>
+    </div>
+    <form method="POST">
+      <input type="hidden" name="action" value="create_random">
+      <div class="form-group">
+        <label>Number of Groups</label>
+        <input type="number" name="group_count" min="2" max="{{ students|length }}" value="3" required>
+        <small style="color:var(--muted);font-size:.8rem">{{ students|length }} students will be distributed evenly</small>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">Generate Groups</button>
+    </form>
+  </div>
+</div>
+
+<!-- Specific Group Modal -->
+<div class="modal-bg" id="specific-modal">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+      <div class="modal-title" style="margin:0">✋ Create Specific Group</div>
+      <button class="modal-close" onclick="document.getElementById('specific-modal').classList.remove('open')">✕</button>
+    </div>
+    <form method="POST">
+      <input type="hidden" name="action" value="create_specific">
+      <div class="form-group">
+        <label>Group Name</label>
+        <input type="text" name="group_name" placeholder="e.g. Alpha Team" required>
+      </div>
+      <div class="form-group">
+        <label>Select Students</label>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.5rem;max-height:200px;overflow-y:auto">
+          {% for s in students %}
+          <label style="display:flex;align-items:center;gap:.5rem;padding:.4rem;cursor:pointer;text-transform:none;font-size:.9rem;color:var(--text);letter-spacing:0">
+            <input type="checkbox" name="members" value="{{ s.id }}" style="width:auto;margin:0">
+            {{ s.name }}
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">Create Group</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Notes — ClassConnect{% endblock %}
+{% block content %}
+<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;margin-bottom:2rem">
+  <div>
+    <h1 class="page-title">📄 Notes</h1>
+    <p class="page-sub">Post notes for your students in {{ cls.name }}</p>
+  </div>
+  <button class="btn btn-primary" onclick="document.getElementById('add-modal').classList.add('open')">+ New Note</button>
+</div>
+
+{% if notes %}
+<div style="display:grid;gap:1rem">
+  {% for n in notes %}
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem">
+      <div>
+        <div style="font-weight:700;font-size:1.05rem;margin-bottom:.25rem">{{ n.title }}</div>
+        <div style="font-size:.8rem;color:var(--muted)">Posted {{ n.created_at[:16] }}</div>
+      </div>
+      <a href="{{ url_for('delete_note', nid=n.id) }}" class="btn btn-red btn-sm"
+         onclick="return confirm('Delete this note?')">🗑 Delete</a>
+    </div>
+    <hr style="border:none;border-top:1px solid var(--border);margin:1rem 0">
+    <p style="color:var(--muted);font-size:.93rem;line-height:1.7;white-space:pre-wrap">{{ n.content }}</p>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card empty">
+  <div class="empty-icon">📄</div>
+  <p>No notes posted yet. Click "+ New Note" to get started.</p>
+</div>
+{% endif %}
+
+<!-- Modal -->
+<div class="modal-bg" id="add-modal">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+      <div class="modal-title" style="margin:0">Post a New Note</div>
+      <button class="modal-close" onclick="document.getElementById('add-modal').classList.remove('open')">✕</button>
+    </div>
+    <form method="POST">
+      <div class="form-group">
+        <label>Title</label>
+        <input type="text" name="title" placeholder="e.g. Chapter 3 Summary" required>
+      </div>
+      <div class="form-group">
+        <label>Content</label>
+        <textarea name="content" placeholder="Write your note here..." required style="min-height:150px"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">Post Note</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

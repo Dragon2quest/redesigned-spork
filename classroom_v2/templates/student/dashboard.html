@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — ClassConnect{% endblock %}
+{% block content %}
+<h1 class="page-title">Hey, {{ session.name }} 👋</h1>
+<p class="page-sub">USN: <span style="font-family:monospace;color:var(--primary)">{{ session.usn }}</span></p>
+
+<div class="grid-2" style="margin-bottom:1.5rem">
+  <div class="card">
+    <div class="card-title">🏫 My Class</div>
+    {% if cls %}
+    <div style="font-size:1.15rem;font-weight:700;margin-bottom:.2rem">{{ cls.name }}</div>
+    <div style="color:var(--muted);font-size:.88rem;margin-bottom:1rem">Teacher: <strong style="color:var(--text)">{{ cls.tname }}</strong></div>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+      <a href="{{ url_for('student_notes') }}" class="btn btn-ghost btn-sm">📄 Notes</a>
+      <a href="{{ url_for('student_assignments') }}" class="btn btn-ghost btn-sm">📝 Tasks</a>
+      <a href="{{ url_for('student_groups') }}" class="btn btn-ghost btn-sm">👥 Groups</a>
+      <a href="{{ url_for('student_progress') }}" class="btn btn-ghost btn-sm">📈 Progress</a>
+    </div>
+    {% else %}<div class="empty" style="padding:1rem">Not enrolled yet</div>{% endif %}
+  </div>
+  <div class="card">
+    <div class="card-title">📅 Upcoming Events</div>
+    {% for e in events %}
+    {% set icon = {'holiday':'🏖️','exam':'📋','event':'📅'}.get(e.event_type,'📅') %}
+    <div class="notif-item">
+      <div style="font-weight:600;font-size:.88rem">{{ icon }} {{ e.title }}</div>
+      <div class="notif-time">{{ e.event_date }} · <span class="badge badge-{% if e.event_type=='holiday' %}green{% elif e.event_type=='exam' %}red{% else %}purple{% endif %}">{{ e.event_type }}</span></div>
+    </div>
+    {% else %}<div class="empty" style="padding:1rem"><div>📅</div><p>No upcoming events</p></div>{% endfor %}
+  </div>
+</div>
+
+<div class="card">
+  <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1rem">
+    <div class="card-title" style="margin:0">🔔 Notifications</div>
+    {% if unread > 0 %}<span class="badge badge-red">{{ unread }} new</span>{% endif %}
+  </div>
+  {% if notifs %}
+    {% for n in notifs %}
+    <div class="notif-item">
+      <div style="font-size:.87rem">{{ n.message }}</div>
+      <div class="notif-time">{{ n.created_at[:16] }}</div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty" style="padding:1.5rem"><div class="empty-icon">🔔</div><p>No notifications</p></div>
+  {% endif %}
+</div>
+{% endblock %}

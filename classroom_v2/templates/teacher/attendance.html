@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Attendance — ClassConnect{% endblock %}
+{% block content %}
+<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;margin-bottom:2rem">
+  <div>
+    <h1 class="page-title">📋 Attendance</h1>
+    <p class="page-sub">Mark and track attendance for {{ cls.name }}</p>
+  </div>
+</div>
+
+<div class="grid-2" style="margin-bottom:2rem">
+  <!-- Mark Attendance -->
+  <div class="card">
+    <div class="card-title">Mark Attendance</div>
+    <form method="POST">
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" name="att_date" value="{{ sel_date }}" required>
+      </div>
+      {% if students %}
+      <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:1rem">
+        <div style="background:var(--surface2);padding:.6rem 1rem;font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:grid;grid-template-columns:1fr auto">
+          <span>Student</span><span>Status</span>
+        </div>
+        {% for s in students %}
+        <div style="padding:.65rem 1rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:1rem">
+          <div>
+            <div style="font-weight:600;font-size:.9rem">{{ s.name }}</div>
+            <div style="font-size:.75rem;color:var(--muted);font-family:monospace">{{ s.usn }}</div>
+          </div>
+          <div style="display:flex;gap:.4rem">
+            {% set cur = existing.get(s.id, 'absent') %}
+            <input class="att-radio" type="radio" name="status_{{ s.id }}" id="p_{{ s.id }}" value="present" {% if cur=='present' %}checked{% endif %}>
+            <label class="att-label" for="p_{{ s.id }}">P</label>
+            <input class="att-radio" type="radio" name="status_{{ s.id }}" id="a_{{ s.id }}" value="absent" {% if cur=='absent' %}checked{% endif %}>
+            <label class="att-label" for="a_{{ s.id }}">A</label>
+            <input class="att-radio" type="radio" name="status_{{ s.id }}" id="l_{{ s.id }}" value="late" {% if cur=='late' %}checked{% endif %}>
+            <label class="att-label" for="l_{{ s.id }}">L</label>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">Save Attendance</button>
+      {% else %}
+      <div class="empty"><div class="empty-icon">👥</div><p>No students enrolled yet.</p></div>
+      {% endif %}
+    </form>
+  </div>
+
+  <!-- Summary -->
+  <div class="card">
+    <div class="card-title">Overall Attendance Summary</div>
+    {% if summary %}
+    <div style="display:grid;gap:.6rem">
+      {% for s in summary %}
+      {% set pct = ((s.present_count / s.total_days) * 100) | round | int if s.total_days > 0 else 0 %}
+      <div style="background:var(--surface2);border-radius:8px;padding:.7rem 1rem">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.35rem">
+          <div>
+            <span style="font-weight:600;font-size:.88rem">{{ s.name }}</span>
+            <span style="font-size:.73rem;color:var(--muted);font-family:monospace;margin-left:.4rem">{{ s.usn }}</span>
+          </div>
+          <span class="badge {% if pct >= 75 %}badge-green{% elif pct >= 50 %}badge-amber{% else %}badge-red{% endif %}">
+            {{ pct }}%
+          </span>
+        </div>
+        <div class="prog-bar">
+          <div class="prog-fill {% if pct >= 75 %}green{% elif pct >= 50 %}amber{% else %}red{% endif %}"
+               style="width:{{ pct }}%"></div>
+        </div>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:.25rem">{{ s.present_count }}/{{ s.total_days }} days present</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty"><div class="empty-icon">📊</div><p>No attendance recorded yet.</p></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

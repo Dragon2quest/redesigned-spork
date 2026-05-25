@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Progress — ClassConnect{% endblock %}
+{% block content %}
+<h1 class="page-title">📊 Work Progress</h1>
+<p class="page-sub">Full participation and completion overview for {{ cls.name }}</p>
+
+<div class="stats" style="margin-bottom:2rem">
+  <div class="stat purple"><div class="stat-num">{{ progress|length }}</div><div class="stat-label">Students</div></div>
+  <div class="stat amber"><div class="stat-num">{{ total_assignments }}</div><div class="stat-label">Total Assignments</div></div>
+  <div class="stat green"><div class="stat-num">{{ total_topics }}</div><div class="stat-label">Group Topics</div></div>
+  <div class="stat red"><div class="stat-num">{{ total_days }}</div><div class="stat-label">Days Tracked</div></div>
+</div>
+
+{% if progress %}
+<div class="card">
+  <table>
+    <thead>
+      <tr>
+        <th>Student</th>
+        <th>USN</th>
+        <th>Attendance</th>
+        <th>Assignments</th>
+        <th>Group Topics</th>
+        <th>Overall Score</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in progress %}
+      <tr>
+        <td style="font-weight:600">{{ p.name }}</td>
+        <td style="font-family:monospace;font-size:.82rem;color:var(--muted)">{{ p.usn or '—' }}</td>
+
+        <!-- Attendance -->
+        <td>
+          <div style="display:flex;align-items:center;gap:.6rem;min-width:120px">
+            <div style="flex:1">
+              <div class="prog-bar"><div class="prog-fill {% if p.att_pct >= 75 %}green{% elif p.att_pct >= 50 %}amber{% else %}red{% endif %}" style="width:{{ p.att_pct }}%"></div></div>
+            </div>
+            <span class="badge {% if p.att_pct >= 75 %}badge-green{% elif p.att_pct >= 50 %}badge-amber{% else %}badge-red{% endif %}">{{ p.att_pct }}%</span>
+          </div>
+          <div style="font-size:.72rem;color:var(--muted)">{{ p.att }}/{{ total_days }} days</div>
+        </td>
+
+        <!-- Assignments -->
+        <td>
+          <div style="display:flex;align-items:center;gap:.6rem;min-width:120px">
+            <div style="flex:1">
+              <div class="prog-bar"><div class="prog-fill {% if p.a_pct >= 75 %}green{% elif p.a_pct >= 50 %}amber{% else %}red{% endif %}" style="width:{{ p.a_pct }}%"></div></div>
+            </div>
+            <span class="badge {% if p.a_pct >= 75 %}badge-green{% elif p.a_pct >= 50 %}badge-amber{% else %}badge-red{% endif %}">{{ p.a_pct }}%</span>
+          </div>
+          <div style="font-size:.72rem;color:var(--muted)">{{ p.subs_a }}/{{ total_assignments }} submitted</div>
+        </td>
+
+        <!-- Topics -->
+        <td>
+          <div style="display:flex;align-items:center;gap:.6rem;min-width:120px">
+            <div style="flex:1">
+              <div class="prog-bar"><div class="prog-fill {% if p.t_pct >= 75 %}green{% elif p.t_pct >= 50 %}amber{% else %}red{% endif %}" style="width:{{ p.t_pct }}%"></div></div>
+            </div>
+            <span class="badge {% if p.t_pct >= 75 %}badge-green{% elif p.t_pct >= 50 %}badge-amber{% else %}badge-red{% endif %}">{{ p.t_pct }}%</span>
+          </div>
+          <div style="font-size:.72rem;color:var(--muted)">{{ p.subs_t }}/{{ total_topics }} done</div>
+        </td>
+
+        <!-- Overall -->
+        <td>
+          <div style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;
+            color:{% if p.overall >= 75 %}var(--green){% elif p.overall >= 50 %}var(--amber){% else %}var(--red){% endif %}">
+            {{ p.overall }}%
+          </div>
+          <div style="font-size:.72rem;color:var(--muted)">
+            {% if p.overall >= 75 %}Good{% elif p.overall >= 50 %}Average{% else %}Needs Attention{% endif %}
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card empty"><div class="empty-icon">📊</div><p>No students enrolled yet.</p></div>
+{% endif %}
+{% endblock %}

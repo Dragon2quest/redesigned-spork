@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — ClassConnect{% endblock %}
+{% block content %}
+<h1 class="page-title">Good day, {{ session.name }} 👋</h1>
+<p class="page-sub">Staff ID: <span style="font-family:monospace;color:var(--primary)">{{ session.staff_id }}</span></p>
+
+{% if cls %}
+<div class="code-box" style="margin-bottom:2rem">
+  <div>
+    <div style="font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:.2rem">Class Code — Share with students</div>
+    <div class="code-val">{{ cls.class_code }}</div>
+  </div>
+  <div style="color:var(--muted);font-size:.88rem"><strong style="color:var(--text)">{{ cls.name }}</strong></div>
+</div>
+
+<div class="stats">
+  <div class="stat green"><div class="stat-num">{{ students }}</div><div class="stat-label">Students</div></div>
+  <div class="stat purple"><div class="stat-num">{{ notes }}</div><div class="stat-label">Notes</div></div>
+  <div class="stat amber"><div class="stat-num">{{ assignments }}</div><div class="stat-label">Assignments</div></div>
+  <div class="stat red"><div class="stat-num">{{ groups }}</div><div class="stat-label">Groups</div></div>
+  <div class="stat green"><div class="stat-num">{{ attendance_today }}</div><div class="stat-label">Present Today</div></div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+      <div class="card-title" style="margin:0">Recent Notes</div>
+      <a href="{{ url_for('teacher_notes') }}" class="btn btn-ghost btn-sm">All Notes</a>
+    </div>
+    {% for n in recent_notes %}<div class="notif-item"><div style="font-weight:600;font-size:.88rem">{{ n.title }}</div><div class="notif-time">{{ n.created_at[:16] }}</div></div>{% else %}<div class="empty" style="padding:1.5rem"><div class="empty-icon">📄</div><p>No notes yet</p></div>{% endfor %}
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+      <div class="card-title" style="margin:0">Upcoming Events</div>
+      <a href="{{ url_for('teacher_events') }}" class="btn btn-ghost btn-sm">All Events</a>
+    </div>
+    {% for e in upcoming_events %}
+    {% set icon = {'holiday':'🏖️','exam':'📋','event':'📅'}.get(e.event_type,'📅') %}
+    <div class="notif-item"><div style="font-weight:600;font-size:.88rem">{{ icon }} {{ e.title }}</div><div class="notif-time">{{ e.event_date }} · {{ e.event_type }}</div></div>
+    {% else %}<div class="empty" style="padding:1.5rem"><div class="empty-icon">📅</div><p>No upcoming events</p></div>{% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Assignments — ClassConnect{% endblock %}
+{% block content %}
+<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;margin-bottom:2rem">
+  <div><h1 class="page-title">📝 Assignments</h1><p class="page-sub">Manage assignments — overdue reminders are sent automatically</p></div>
+  <button class="btn btn-primary" onclick="document.getElementById('add-modal').classList.add('open')">+ New Assignment</button>
+</div>
+{% if assignments %}
+<div class="card">
+<table>
+  <thead><tr><th>Title</th><th>Subject</th><th>Deadline</th><th>Progress</th></tr></thead>
+  <tbody>
+    {% for a in assignments %}
+    <tr>
+      <td><div style="font-weight:600">{{ a.title }}</div>{% if a.description %}<div style="font-size:.78rem;color:var(--muted)">{{ a.description[:50] }}{% if a.description|length>50 %}…{% endif %}</div>{% endif %}</td>
+      <td><span class="badge badge-purple">{{ a.subject or '—' }}</span></td>
+      <td style="font-size:.85rem;font-family:monospace">{{ a.deadline[:16] }}</td>
+      <td>
+        {% set pct = ((a.subs / total_students) * 100) | round | int if total_students > 0 else 0 %}
+        <div style="display:flex;align-items:center;gap:.6rem;min-width:120px">
+          <div style="flex:1"><div class="prog-bar"><div class="prog-fill {% if pct >= 75 %}green{% elif pct >= 40 %}amber{% else %}red{% endif %}" style="width:{{ pct }}%"></div></div></div>
+          <span style="font-size:.8rem;color:var(--muted)">{{ a.subs }}/{{ total_students }}</span>
+        </div>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<div class="card empty"><div class="empty-icon">📝</div><p>No assignments yet.</p></div>
+{% endif %}
+<div class="modal-bg" id="add-modal">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+      <div class="modal-title" style="margin:0">Create Assignment</div>
+      <button class="modal-close" onclick="document.getElementById('add-modal').classList.remove('open')">✕</button>
+    </div>
+    <form method="POST">
+      <div class="form-group"><label>Title</label><input type="text" name="title" required placeholder="e.g. ER Diagram Exercise"></div>
+      <div class="form-group"><label>Subject</label><input type="text" name="subject" placeholder="e.g. DBMS"></div>
+      <div class="form-group"><label>Description</label><textarea name="description" placeholder="Instructions..."></textarea></div>
+      <div class="form-group"><label>Deadline</label><input type="datetime-local" name="deadline" required></div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">Create</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
