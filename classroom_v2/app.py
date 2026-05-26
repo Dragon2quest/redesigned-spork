@@ -8,7 +8,9 @@ from email_utils import overdue_email, event_email, build_html, send_email
 
 app = Flask(__name__)
 app.secret_key = 'classconnect_v2_secret_2024'
-DATABASE = 'classroom.db'
+APP_DIR = os.path.dirname(os.path.abspath(__file__))
+DATABASE = os.path.join(APP_DIR, 'classroom.db')
+SCHEMA = os.path.join(APP_DIR, 'schema.sql')
 
 # ─── DB ───────────────────────────────────────────────
 def get_db():
@@ -17,7 +19,7 @@ def get_db():
     return c
 
 def init_db():
-    with open('schema.sql') as f:
+    with open(SCHEMA) as f:
         c = get_db(); c.executescript(f.read()); c.commit(); c.close()
 
 def hp(p): return hashlib.sha256(p.encode()).hexdigest()
@@ -29,7 +31,7 @@ def check_overdue():
     try:
         now = datetime.now().strftime('%Y-%m-%d %H:%M')
         assignments = conn.execute(
-            "SELECT * FROM assignments WHERE deadline <= ?", (now,)).fetchall()
+            "SELECT * FROM assignments WHERE replace(deadline, 'T', ' ') <= ?", (now,)).fetchall()
         for a in assignments:
             non_submitters = conn.execute("""
                 SELECT u.id, u.name, u.email FROM users u
@@ -65,10 +67,16 @@ def check_overdue():
     finally:
         conn.close()
 
-scheduler = BackgroundScheduler()
-scheduler.add_job(func=check_overdue, trigger=IntervalTrigger(hours=1))
-scheduler.start()
-atexit.register(lambda: scheduler.shutdown())
+scheduler = None
+
+def start_scheduler():
+    global scheduler
+    if scheduler and scheduler.running:
+        return
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(func=check_overdue, trigger=IntervalTrigger(hours=1))
+    scheduler.start()
+    atexit.register(lambda: scheduler.shutdown(wait=False) if scheduler.running else None)
 
 # ─── HELPERS ──────────────────────────────────────────
 def teacher_required(f):
@@ -89,6 +97,12 @@ def student_required(f):
 
 def get_teacher_class(conn):
     return conn.execute('SELECT * FROM classes WHERE teacher_id=?', (session['user_id'],)).fetchone()
+
+def require_teacher_class(conn):
+    cls = get_teacher_class(conn)
+    if not cls:
+        flash('Create a class before using this page.','error')
+    return cls
 
 def notify_class(conn, class_id, message):
     students = conn.execute('SELECT student_id FROM enrollments WHERE class_id=?', (class_id,)).fetchall()
@@ -197,7 +211,9 @@ def teacher_dashboard():
 @app.route('/teacher/notes', methods=['GET','POST'])
 @teacher_required
 def teacher_notes():
-    conn = get_db(); cls = get_teacher_class(conn)
+    conn = get_db(); cls = require_teacher_class(conn)
+    if not cls:
+        conn.close(); return redirect(url_for('teacher_dashboard'))
     if request.method == 'POST':
         t,c = request.form['title'], request.form['content']
         conn.execute('INSERT INTO notes(class_id,teacher_id,title,content) VALUES(?,?,?,?)',
@@ -219,7 +235,9 @@ def delete_note(nid):
 @app.route('/teacher/assignments', methods=['GET','POST'])
 @teacher_required
 def teacher_assignments():
-    conn = get_db(); cls = get_teacher_class(conn)
+    conn = get_db(); cls = require_teacher_class(conn)
+    if not cls:
+        conn.close(); return redirect(url_for('teacher_dashboard'))
     if request.method == 'POST':
         t,d,s,dl = (request.form['title'],request.form['description'],
                     request.form['subject'],request.form['deadline'])
@@ -237,7 +255,9 @@ def teacher_assignments():
 @app.route('/teacher/groups', methods=['GET','POST'])
 @teacher_required
 def teacher_groups():
-    conn = get_db(); cls = get_teacher_class(conn)
+    conn = get_db(); cls = require_teacher_class(conn)
+    if not cls:
+        conn.close(); return redirect(url_for('teacher_dashboard'))
     students = conn.execute(
         'SELECT u.id,u.name,u.usn FROM users u JOIN enrollments e ON u.id=e.student_id WHERE e.class_id=?',
         (cls['id'],)).fetchall()
@@ -245,16 +265,22 @@ def teacher_groups():
     if request.method == 'POST':
         action = request.form['action']
         if action == 'create_random':
-            gc   = int(request.form['group_count'])
-            ids  = [s['id'] for s in students]; random.shuffle(ids)
-            sz,rem = divmod(len(ids),gc); idx=0
-            for i in range(gc):
-                conn.execute('INSERT INTO groups(class_id,name,group_type) VALUES(?,?,?)',(cls['id'],f'Group {i+1}','random'))
-                conn.commit()
-                gid = conn.execute('SELECT last_insert_rowid()').fetchone()[0]
-                for _ in range(sz+(1 if i<rem else 0)):
-                    if idx<len(ids): conn.execute('INSERT INTO group_members(group_id,student_id) VALUES(?,?)',(gid,ids[idx])); idx+=1
-            conn.commit(); flash(f'{gc} random groups created!','success')
+            try:
+                gc = int(request.form['group_count'])
+            except ValueError:
+                gc = 0
+            if gc < 1 or gc > len(students):
+                flash('Enter a valid group count.','error')
+            else:
+                ids  = [s['id'] for s in students]; random.shuffle(ids)
+                sz,rem = divmod(len(ids),gc); idx=0
+                for i in range(gc):
+                    conn.execute('INSERT INTO groups(class_id,name,group_type) VALUES(?,?,?)',(cls['id'],f'Group {i+1}','random'))
+                    conn.commit()
+                    gid = conn.execute('SELECT last_insert_rowid()').fetchone()[0]
+                    for _ in range(sz+(1 if i<rem else 0)):
+                        if idx<len(ids): conn.execute('INSERT INTO group_members(group_id,student_id) VALUES(?,?)',(gid,ids[idx])); idx+=1
+                conn.commit(); flash(f'{gc} random groups created!','success')
         elif action == 'create_specific':
             gname = request.form['group_name']; members = request.form.getlist('members')
             if not members: flash('Select at least one student.','error')
@@ -267,6 +293,9 @@ def teacher_groups():
         elif action == 'assign_topic':
             gid,t,s,desc,dl = (request.form['group_id'],request.form['topic_title'],
                 request.form['subject'],request.form['description'],request.form['deadline'])
+            if not conn.execute('SELECT id FROM groups WHERE id=? AND class_id=?',(gid,cls['id'])).fetchone():
+                flash('Invalid group selected.','error')
+                conn.close(); return redirect(url_for('teacher_groups'))
             conn.execute('INSERT INTO topics(group_id,title,subject,description,deadline) VALUES(?,?,?,?,?)',(gid,t,s,desc,dl))
             mems = conn.execute('SELECT student_id FROM group_members WHERE group_id=?',(gid,)).fetchall()
             grp  = conn.execute('SELECT name FROM groups WHERE id=?',(gid,)).fetchone()
@@ -286,7 +315,9 @@ def teacher_groups():
 @app.route('/teacher/submissions')
 @teacher_required
 def teacher_submissions():
-    conn = get_db(); cls = get_teacher_class(conn)
+    conn = get_db(); cls = require_teacher_class(conn)
+    if not cls:
+        conn.close(); return redirect(url_for('teacher_dashboard'))
     subs = conn.execute('''
         SELECT s.*,u.name as sname,u.usn,
                a.title as atitle,t.title as ttitle,g.name as gname
@@ -304,7 +335,9 @@ def teacher_submissions():
 @app.route('/teacher/attendance', methods=['GET','POST'])
 @teacher_required
 def teacher_attendance():
-    conn = get_db(); cls = get_teacher_class(conn)
+    conn = get_db(); cls = require_teacher_class(conn)
+    if not cls:
+        conn.close(); return redirect(url_for('teacher_dashboard'))
     sel_date = request.args.get('date', date.today().isoformat())
     students = conn.execute(
         'SELECT u.id,u.name,u.usn FROM users u JOIN enrollments e ON u.id=e.student_id WHERE e.class_id=? ORDER BY u.name',
@@ -346,7 +379,9 @@ def teacher_attendance():
 @app.route('/teacher/progress')
 @teacher_required
 def teacher_progress():
-    conn = get_db(); cls = get_teacher_class(conn)
+    conn = get_db(); cls = require_teacher_class(conn)
+    if not cls:
+        conn.close(); return redirect(url_for('teacher_dashboard'))
     cid = cls['id']
     total_assignments = conn.execute('SELECT COUNT(*) as c FROM assignments WHERE class_id=?',(cid,)).fetchone()['c']
     total_topics      = conn.execute('SELECT COUNT(*) as c FROM topics t JOIN groups g ON t.group_id=g.id WHERE g.class_id=?',(cid,)).fetchone()['c']
@@ -376,7 +411,9 @@ def teacher_progress():
 @app.route('/teacher/events', methods=['GET','POST'])
 @teacher_required
 def teacher_events():
-    conn = get_db(); cls = get_teacher_class(conn)
+    conn = get_db(); cls = require_teacher_class(conn)
+    if not cls:
+        conn.close(); return redirect(url_for('teacher_dashboard'))
     cfg  = conn.execute('SELECT * FROM email_config WHERE teacher_id=?',(session['user_id'],)).fetchone()
 
     if request.method == 'POST':
@@ -386,8 +423,9 @@ def teacher_events():
         ev_type  = request.form['event_type']
         send_mail= request.form.get('send_email') == '1'
 
-        conn.execute('INSERT INTO events(class_id,teacher_id,title,description,event_date,event_type) VALUES(?,?,?,?,?,?)',
-                     (cls['id'],session['user_id'],title,desc,ev_date,ev_type))
+        cur = conn.execute('INSERT INTO events(class_id,teacher_id,title,description,event_date,event_type) VALUES(?,?,?,?,?,?)',
+                           (cls['id'],session['user_id'],title,desc,ev_date,ev_type))
+        event_id = cur.lastrowid
         notify_class(conn, cls['id'], f'📅 {ev_type.title()}: {title} on {ev_date}')
         email_sent = False
 
@@ -402,8 +440,8 @@ def teacher_events():
         elif send_mail and not cfg:
             flash('Configure Gmail first in Settings to send emails.','error')
 
-        conn.execute('UPDATE events SET email_sent=? WHERE class_id=? AND title=? AND event_date=?',
-                     (1 if email_sent else 0, cls['id'], title, ev_date))
+        conn.execute('UPDATE events SET email_sent=? WHERE id=?',
+                     (1 if email_sent else 0, event_id))
         conn.commit()
         flash(f'Event added!{" Emails sent." if email_sent else ""}','success')
 
@@ -468,7 +506,13 @@ def student_assignments():
     conn = get_db()
     if request.method == 'POST':
         aid, content = request.form['assignment_id'], request.form['content']
-        if conn.execute('SELECT id FROM submissions WHERE assignment_id=? AND student_id=?',(aid,session['user_id'])).fetchone():
+        allowed = conn.execute('''
+            SELECT a.id FROM assignments a
+            JOIN enrollments e ON a.class_id=e.class_id
+            WHERE a.id=? AND e.student_id=?''',(aid,session['user_id'])).fetchone()
+        if not allowed:
+            flash('Invalid assignment selected.','error')
+        elif conn.execute('SELECT id FROM submissions WHERE assignment_id=? AND student_id=?',(aid,session['user_id'])).fetchone():
             flash('Already submitted!','error')
         else:
             conn.execute('INSERT INTO submissions(assignment_id,student_id,content) VALUES(?,?,?)',(aid,session['user_id'],content))
@@ -487,7 +531,14 @@ def student_groups():
     conn = get_db()
     if request.method == 'POST':
         tid,gid,content = request.form['topic_id'],request.form['group_id'],request.form['content']
-        if conn.execute('SELECT id FROM submissions WHERE topic_id=? AND student_id=?',(tid,session['user_id'])).fetchone():
+        allowed = conn.execute('''
+            SELECT t.id FROM topics t
+            JOIN groups g ON t.group_id=g.id
+            JOIN group_members gm ON g.id=gm.group_id
+            WHERE t.id=? AND g.id=? AND gm.student_id=?''',(tid,gid,session['user_id'])).fetchone()
+        if not allowed:
+            flash('Invalid topic selected.','error')
+        elif conn.execute('SELECT id FROM submissions WHERE topic_id=? AND student_id=?',(tid,session['user_id'])).fetchone():
             flash('Already submitted!','error')
         else:
             conn.execute('INSERT INTO submissions(topic_id,group_id,student_id,content) VALUES(?,?,?,?)',(tid,gid,session['user_id'],content))
@@ -553,4 +604,7 @@ def student_progress():
 
 if __name__ == '__main__':
     if not os.path.exists(DATABASE): init_db()
+    app.debug = True
+    if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+        start_scheduler()
     app.run(debug=True)
